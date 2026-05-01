@@ -30,8 +30,7 @@ The goal was to create a clean and responsive UI where users can explore Pokémo
 ## How to Run
 
 1. Clone the repo:
-   git clone https://github.com/YOUR-USERNAME/pokedex-lite.git
-
+   git clone : https://github.com/prashantsuryavanshi0/pokedex-lite
 2. Go inside folder:
    cd pokedex-lite
 
@@ -45,7 +44,7 @@ The goal was to create a clean and responsive UI where users can explore Pokémo
 
 ## Live Demo
 
-https://YOUR-VERCEL-LINK.vercel.app
+https://pokedex-lite-tau-eight.vercel.app/
 
 ---
 
@@ -66,12 +65,6 @@ https://YOUR-VERCEL-LINK.vercel.app
 
 ---
 
-## Links
-
-GitHub Repo: https://github.com/YOUR-USERNAME/pokedex-lite
-Live Site: https://YOUR-VERCEL-LINK.vercel.app
-
----
 
 ## Author
 
