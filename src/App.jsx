@@ -3,34 +3,34 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 
 function App() {
-  const [pokemons, setPokemons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [selectedPokemon, setSelectedPokemon] = useState(null);
+  const [pokemonList, setPokemonList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [activePokemon, setActivePokemon] = useState(null);
   const [offset, setOffset] = useState(0);
 
-  const [favorites, setFavorites] = useState(
-    JSON.parse(localStorage.getItem("fav")) || []
+  const [favList, setFavList] = useState(
+    JSON.parse(localStorage.getItem("favorites")) || []
   );
 
   useEffect(() => {
-    fetchPokemons();
+    loadPokemons();
   }, [offset]);
 
-  const fetchPokemons = async () => {
+  const loadPokemons = async () => {
     try {
-      setLoading(true);
-      setError("");
+      setIsLoading(true);
+      setErrorMsg("");
 
       const res = await axios.get(
         `https://pokeapi.co/api/v2/pokemon?limit=20&offset=${offset}`
       );
 
       const data = await Promise.all(
-        res.data.results.map(async (p) => {
-          const details = await axios.get(p.url);
+        res.data.results.map(async (item) => {
+          const details = await axios.get(item.url);
           return {
             name: details.data.name,
             image: details.data.sprites.front_default,
@@ -43,53 +43,53 @@ function App() {
         })
       );
 
-      setPokemons(data);
-      setLoading(false);
+      setPokemonList(data);
+      setIsLoading(false);
     } catch (err) {
-      setError("❌ Failed to load Pokémon");
-      setLoading(false);
+      setErrorMsg("Failed to load Pokémon data");
+      setIsLoading(false);
     }
   };
 
-  const toggleFav = (pokemon) => {
+  const handleFavorite = (pokemon) => {
     let updated;
-    if (favorites.find((f) => f.name === pokemon.name)) {
-      updated = favorites.filter((f) => f.name !== pokemon.name);
+    if (favList.find((f) => f.name === pokemon.name)) {
+      updated = favList.filter((f) => f.name !== pokemon.name);
     } else {
-      updated = [...favorites, pokemon];
+      updated = [...favList, pokemon];
     }
-    setFavorites(updated);
-    localStorage.setItem("fav", JSON.stringify(updated));
+    setFavList(updated);
+    localStorage.setItem("favorites", JSON.stringify(updated));
   };
 
-  const filtered = pokemons
+  const filteredList = pokemonList
     .filter((p) =>
-      p.name.toLowerCase().includes(search.toLowerCase())
+      p.name.toLowerCase().includes(searchText.toLowerCase())
     )
     .filter((p) =>
-      typeFilter ? p.types.includes(typeFilter) : true
+      selectedType ? p.types.includes(selectedType) : true
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-6">
-      <h1 className="text-5xl font-bold text-center mb-8">
-        Pokedex Lite 🔥
+    <div className="min-h-screen bg-gray-900 text-white p-6">
+      <h1 className="text-4xl text-center mb-6 font-bold">
+        My Pokedex App 🔥
       </h1>
 
       {/* Search */}
       <input
         type="text"
         placeholder="Search Pokémon..."
-        className="w-full p-3 mb-4 rounded-xl bg-white/10 backdrop-blur"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        className="w-full p-3 mb-4 rounded bg-gray-800 text-white border border-gray-600"
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
       />
 
-      {/* Filter */}
+      {/* FIXED DROPDOWN */}
       <select
-        className="p-3 mb-6 rounded-xl bg-white/10 backdrop-blur"
-        value={typeFilter}
-        onChange={(e) => setTypeFilter(e.target.value)}
+        className="p-3 mb-6 rounded bg-gray-800 text-white border border-gray-600"
+        value={selectedType}
+        onChange={(e) => setSelectedType(e.target.value)}
       >
         <option value="">All Types</option>
         <option value="grass">Grass</option>
@@ -99,28 +99,21 @@ function App() {
       </select>
 
       {/* Error */}
-      {error && (
-        <p className="text-red-500 text-center mb-4">{error}</p>
+      {errorMsg && (
+        <p className="text-red-400 text-center mb-4">{errorMsg}</p>
       )}
 
-      {/* Grid */}
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="h-40 rounded-xl bg-white/10 animate-pulse"
-            />
-          ))}
-        </div>
+      {/* Loading */}
+      {isLoading ? (
+        <p className="text-center">Loading...</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {filtered.map((p) => (
+          {filteredList.map((p) => (
             <motion.div
               key={p.name}
-              whileHover={{ scale: 1.08 }}
-              className="bg-white/10 backdrop-blur-lg p-4 rounded-xl text-center cursor-pointer"
-              onClick={() => setSelectedPokemon(p)}
+              whileHover={{ scale: 1.05 }}
+              className="bg-gray-800 p-4 rounded-lg text-center cursor-pointer"
+              onClick={() => setActivePokemon(p)}
             >
               <img src={p.image} className="mx-auto w-24 h-24" />
               <h2 className="capitalize mt-2">{p.name}</h2>
@@ -128,11 +121,11 @@ function App() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  toggleFav(p);
+                  handleFavorite(p);
                 }}
-                className="text-xl mt-2"
+                className="mt-2 text-xl"
               >
-                {favorites.find((f) => f.name === p.name)
+                {favList.find((f) => f.name === p.name)
                   ? "❤️"
                   : "🤍"}
               </button>
@@ -160,7 +153,7 @@ function App() {
 
       {/* Modal */}
       <AnimatePresence>
-        {selectedPokemon && (
+        {activePokemon && (
           <motion.div
             className="fixed inset-0 bg-black/70 flex justify-center items-center"
             initial={{ opacity: 0 }}
@@ -168,21 +161,21 @@ function App() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white/10 backdrop-blur p-6 rounded-xl w-80 text-center"
-              initial={{ scale: 0.7 }}
+              className="bg-gray-800 p-6 rounded-lg w-80 text-center"
+              initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
-              exit={{ scale: 0.7 }}
+              exit={{ scale: 0.8 }}
             >
-              <h2 className="text-2xl capitalize">
-                {selectedPokemon.name}
+              <h2 className="text-2xl capitalize mb-2">
+                {activePokemon.name}
               </h2>
-              <img src={selectedPokemon.image} className="mx-auto" />
+              <img src={activePokemon.image} className="mx-auto mb-3" />
 
-              <p>HP: {selectedPokemon.stats.hp}</p>
-              <p>Attack: {selectedPokemon.stats.attack}</p>
+              <p>HP: {activePokemon.stats.hp}</p>
+              <p>Attack: {activePokemon.stats.attack}</p>
 
               <button
-                onClick={() => setSelectedPokemon(null)}
+                onClick={() => setActivePokemon(null)}
                 className="mt-4 px-4 py-2 bg-red-500 rounded"
               >
                 Close
